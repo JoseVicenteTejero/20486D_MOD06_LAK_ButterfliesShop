@@ -6,6 +6,7 @@ using ButterfliesShop.Models;
 using ButterfliesShop.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using System.IO;
 
 namespace ButterfliesShop.Controllers
 {
@@ -34,6 +35,12 @@ namespace ButterfliesShop.Controllers
                 }
             }
         }
+        public IActionResult Index()
+        {
+            IndexViewModel indexViewModel = new IndexViewModel();
+            indexViewModel.Butterflies = _data.ButterfliesList;
+            return View(indexViewModel);
+        }
 
         public IActionResult GetImage(int id)
         {
@@ -47,5 +54,33 @@ namespace ButterfliesShop.Controllers
                 return NotFound();
             }
         }
+
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View();
+        }
+        [HttpPost]
+        public IActionResult Create(Butterfly butterfly)
+        {
+            Butterfly lastButterfly = _data.ButterfliesList.LastOrDefault();
+            butterfly.CreatedDate = DateTime.Today;
+            if (butterfly.PhotoAvatar != null && butterfly.PhotoAvatar.Length > 0)
+            {
+                butterfly.ImageMimeType = butterfly.PhotoAvatar.ContentType;
+                butterfly.ImageName = Path.GetFileName(butterfly.PhotoAvatar.FileName);
+                butterfly.Id = lastButterfly.Id + 1;
+                _butterfliesQuantityService.AddButterfliesQuantityData(butterfly);
+                using (var memoryStream = new MemoryStream())
+                {
+                    butterfly.PhotoAvatar.CopyTo(memoryStream);
+                    butterfly.PhotoFile = memoryStream.ToArray();
+                }
+                _data.AddButterfly(butterfly);
+                return RedirectToAction("Index");
+            }
+            return View(butterfly);
+        }
+
     }
 }
