@@ -86,7 +86,9 @@ namespace ButterfliesShop.Controllers
         [HttpPost]
         public IActionResult Create(Butterfly butterfly)
         {
-            Butterfly lastButterfly = _data.ButterfliesList.LastOrDefault();
+            if (ModelState.IsValid)
+            {
+                Butterfly lastButterfly = _data.ButterfliesList.LastOrDefault();
             butterfly.CreatedDate = DateTime.Today;
             if (butterfly.PhotoAvatar != null && butterfly.PhotoAvatar.Length > 0)
             {
@@ -101,6 +103,8 @@ namespace ButterfliesShop.Controllers
                 }
                 _data.AddButterfly(butterfly);
                 return RedirectToAction("Index");
+            }
+            return View(butterfly);
             }
             return View(butterfly);
         }
